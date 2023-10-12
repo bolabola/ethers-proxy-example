@@ -1,5 +1,4 @@
-const { ethers, JsonRpcProvider, FetchRequest } = require('ethers');
-const fetch = require('cross-fetch');
+const { JsonRpcProvider, FetchRequest } = require('ethers');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 const http = require('node:http');
 const { createProxy } = require('proxy');
