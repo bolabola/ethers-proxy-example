@@ -1,4 +1,3 @@
-//const { ethers, JsonRpcProvider, FetchRequest } = require('../ethers.js/lib.commonjs/index.js');
 const { ethers, JsonRpcProvider, FetchRequest } = require('ethers');
 const fetch = require('cross-fetch');
 const { HttpsProxyAgent } = require('https-proxy-agent');
@@ -6,6 +5,8 @@ const http = require('node:http');
 const { createProxy } = require('proxy');
 
 const ETH_RPC = 'https://eth.llamarpc.com';
+// Example that doesn't use proxy connections
+const BSC_RPC = 'https://binance.llamarpc.com';
 
 const HTTP_PROXY_PORT = 3128;
 const HTTP_PROXY_HOST = 'localhost';
@@ -60,41 +61,30 @@ const getUrl = async (req, _signal) => {
   };
 };
 
-const sleep = (sec) => new Promise(r => setTimeout(r, sec * 1000));
-
 /**
  * Define new FetchRequest used for a provider
  */
 // Assigning custom getUrl function will apply to all ethers v6 providers
 
-/**
-For next ethers.js version release
-
 const fetchReq = new FetchRequest(ETH_RPC);
 fetchReq.getUrlFunc = getUrl;
 const provider = new JsonRpcProvider(fetchReq);
-const provider2 = new JsonRpcProvider('https://binance.llamarpc.com');
+const provider2 = new JsonRpcProvider(BSC_RPC);
 
-sleep(2).then(() => provider.getBlockNumber().then(console.log));
-sleep(2).then(() => provider2.getBlockNumber().then(console.log));
-**/
+let resolvePromise;
+const promise = new Promise((resolve) => {resolvePromise = resolve});
 
-FetchRequest.registerGetUrl(getUrl);
-const provider = new JsonRpcProvider(ETH_RPC);
-
-// Sleep until proxy server is booted up
-sleep(2).then(() => provider.getBlockNumber().then(console.log));
+promise.then(() => provider.getBlockNumber().then(console.log));
+promise.then(() => provider2.getBlockNumber().then(console.log));
 
 /**
- * (Optional) Define new http proxy server (like squid)
+ * (Optional) Define new http proxy server to demonstrate RPC proxy connection (like squid)
  */
-let server = http.createServer();
-
-server = createProxy(server);
+const server = createProxy(http.createServer());
 
 server.listen(3128, () => {
-  var port = server.address().port;
-  console.log('HTTP(s) proxy server listening on port %d', port);
+  resolvePromise();
+  console.log('HTTP(s) proxy server listening on port %d', server.address().port);
 });
 
 server.on('connect', (res, socket) => {
